@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/session";
 import { generateUploadUrl, generateFileKey, getR2PublicUrl } from "@/lib/r2-client";
 import { getDb } from "@/lib/db";
-import { media as mediaSchema } from "@/drizzle/schema";
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,18 +20,17 @@ export async function POST(request: NextRequest) {
     const uploadUrl = await generateUploadUrl(key, contentType);
     const publicUrl = getR2PublicUrl(key);
 
-    // Record in database
+    // Record in database using native D1
     try {
       const db = getDb();
-      await db.insert(mediaSchema).values({
-        filename,
-        url: publicUrl,
-        size: 0,
-        mimeType: contentType,
-        uploadedAt: new Date().toISOString(),
-      });
+      const now = new Date().toISOString();
+      await db
+        .prepare(
+          "INSERT INTO media (filename, url, size, mime_type, uploaded_at) VALUES (?, ?, ?, ?, ?)"
+        )
+        .bind(filename, publicUrl, 0, contentType, now)
+        .run();
     } catch (dbError) {
-      // Non-critical: upload URL is still valid
       console.error("Failed to record media in DB:", dbError);
     }
 

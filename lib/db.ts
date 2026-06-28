@@ -1,22 +1,29 @@
-import { drizzle } from "drizzle-orm/d1";
-import * as schema from "@/drizzle/schema";
+/// <reference types="@cloudflare/workers-types" />
 
 // Get the Cloudflare bindings from OpenNext context
 function getCloudflareEnv(): Record<string, unknown> | null {
-  // OpenNext stores env in AsyncLocalStorage under this symbol
-  const ctx = (globalThis as any)[Symbol.for("__cloudflare-context__")];
-  return ctx?.env ?? null;
+  try {
+    const sym = Symbol.for("__cloudflare-context__");
+    const descriptor = Object.getOwnPropertyDescriptor(globalThis, sym as any);
+    if (descriptor?.get) {
+      const ctx = descriptor.get.call(globalThis);
+      if (ctx?.env) return ctx.env;
+    }
+  } catch {}
+
+  return null;
 }
 
-export function getDb() {
+export function getDb(): D1Database {
   const env = getCloudflareEnv();
+
   if (env?.DB) {
-    return drizzle(env.DB as D1Database, { schema });
+    return env.DB as D1Database;
   }
 
-  // Fallback for non-Cloudflare environments
   throw new Error(
-    "D1 database binding not available. Ensure the DB binding is configured in wrangler.jsonc."
+    "D1 binding not found. Available: " +
+      (env ? Object.keys(env).join(", ") : "none")
   );
 }
 
