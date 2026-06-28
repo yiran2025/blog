@@ -1,4 +1,4 @@
-import { eq, desc, like, and, sql as drizzleSql } from "drizzle-orm";
+import { eq, desc, and, lt, gt, sql as drizzleSql } from "drizzle-orm";
 import * as schema from "@/drizzle/schema";
 
 // Types
@@ -246,8 +246,7 @@ export async function getAdjacentPosts(db: any, currentCreatedAt: string) {
     .where(
       and(
         eq(schema.posts.isPublished, 1),
-        // @ts-ignore - SQL comparison
-        drizzleSql`${schema.posts.createdAt} < ${currentCreatedAt}`
+        lt(schema.posts.createdAt, currentCreatedAt)
       )
     )
     .orderBy(desc(schema.posts.createdAt))
@@ -262,8 +261,7 @@ export async function getAdjacentPosts(db: any, currentCreatedAt: string) {
     .where(
       and(
         eq(schema.posts.isPublished, 1),
-        // @ts-ignore - SQL comparison
-        drizzleSql`${schema.posts.createdAt} > ${currentCreatedAt}`
+        gt(schema.posts.createdAt, currentCreatedAt)
       )
     )
     .orderBy(schema.posts.createdAt)

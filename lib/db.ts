@@ -1,31 +1,26 @@
 import { drizzle } from "drizzle-orm/d1";
 import * as schema from "@/drizzle/schema";
 
-// This function creates a drizzle instance from a D1 database binding
-export function createDb(d1: D1Database) {
-  return drizzle(d1, { schema });
+// Get the Cloudflare bindings from OpenNext context
+function getCloudflareEnv(): Record<string, unknown> | null {
+  // OpenNext stores env in AsyncLocalStorage under this symbol
+  const ctx = (globalThis as any)[Symbol.for("__cloudflare-context__")];
+  return ctx?.env ?? null;
 }
 
-// Get D1 from Cloudflare Pages environment
-export function getD1(): D1Database {
-  // @ts-ignore - Cloudflare Pages provides this global
-  if (typeof process !== "undefined" && process.env?.DB) {
-    // @ts-ignore
-    return process.env.DB;
-  }
-  throw new Error("D1 database not found. Ensure DB binding is configured.");
-}
-
-// For edge runtime, use the platform proxy
 export function getDb() {
-  // In Cloudflare Pages, DB is injected as a binding
-  // @ts-ignore
-  const d1 = (globalThis as any).__D1_DATA__?.DB || process.env?.DB;
-  if (!d1) {
-    // For local development, we'll use a proxy approach
-    throw new Error(
-      "D1 database not available. In local dev, use wrangler pages dev."
-    );
+  const env = getCloudflareEnv();
+  if (env?.DB) {
+    return drizzle(env.DB as D1Database, { schema });
   }
-  return drizzle(d1 as D1Database, { schema });
+
+  // Fallback for non-Cloudflare environments
+  throw new Error(
+    "D1 database binding not available. Ensure the DB binding is configured in wrangler.jsonc."
+  );
+}
+
+export function getR2Binding() {
+  const env = getCloudflareEnv();
+  return env?.R2 ?? null;
 }

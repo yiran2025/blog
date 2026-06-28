@@ -6,6 +6,12 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
+// Get the Cloudflare bindings from OpenNext context
+function getCloudflareEnv(): Record<string, unknown> | null {
+  const ctx = (globalThis as any)[Symbol.for("__cloudflare-context__")];
+  return ctx?.env ?? null;
+}
+
 function getR2Client(): S3Client {
   return new S3Client({
     region: "auto",
@@ -32,6 +38,27 @@ export async function generateUploadUrl(
   });
 
   return getSignedUrl(client, command, { expiresIn });
+}
+
+// Direct R2 upload using Worker binding (no S3 credentials needed)
+export async function uploadToR2(
+  key: string,
+  body: ArrayBuffer | ReadableStream | Blob,
+  contentType: string
+): Promise<string> {
+  const env = getCloudflareEnv();
+  const r2Binding = env?.R2 as any;
+  const bucketName = process.env.R2_BUCKET_NAME || "my-blog-media";
+
+  if (!r2Binding) {
+    throw new Error("R2 binding not available");
+  }
+
+  await r2Binding.put(key, body, {
+    httpMetadata: { contentType },
+  });
+
+  return getR2PublicUrl(key);
 }
 
 export async function deleteFromR2(key: string): Promise<void> {
@@ -72,14 +99,9 @@ export async function listR2Objects(
 export function getR2PublicUrl(key: string): string {
   const publicUrl = process.env.R2_PUBLIC_URL || "";
   if (!publicUrl) {
-    // Fallback: construct URL from endpoint
     const endpoint = process.env.R2_ENDPOINT || "";
     const bucket = process.env.R2_BUCKET_NAME || "my-blog-media";
-    // Extract account ID from endpoint
-    const match = endpoint.match(/https?:\/\/([^.]+)\./);
-    if (match) {
-      return `${endpoint}/${bucket}/${key}`;
-    }
+    return `${endpoint}/${bucket}/${key}`;
   }
   return `${publicUrl.replace(/\/$/, "")}/${key}`;
 }
