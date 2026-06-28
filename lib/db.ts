@@ -1,33 +1,16 @@
 /// <reference types="@cloudflare/workers-types" />
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 
-// Get the Cloudflare bindings from OpenNext context
-function getCloudflareEnv(): Record<string, unknown> | null {
-  try {
-    const sym = Symbol.for("__cloudflare-context__");
-    const descriptor = Object.getOwnPropertyDescriptor(globalThis, sym as any);
-    if (descriptor?.get) {
-      const ctx = descriptor.get.call(globalThis);
-      if (ctx?.env) return ctx.env;
-    }
-  } catch {}
-
-  return null;
-}
-
-export function getDb(): D1Database {
-  const env = getCloudflareEnv();
-
-  if (env?.DB) {
-    return env.DB as D1Database;
+export function getDb() {
+  const { env } = getCloudflareContext();
+  const envObj = env as Record<string, unknown>;
+  if (envObj.DB) {
+    return envObj.DB as D1Database;
   }
-
-  throw new Error(
-    "D1 binding not found. Available: " +
-      (env ? Object.keys(env).join(", ") : "none")
-  );
+  throw new Error("D1 binding not found. Available: " + Object.keys(envObj).join(", "));
 }
 
 export function getR2Binding() {
-  const env = getCloudflareEnv();
-  return env?.R2 ?? null;
+  const { env } = getCloudflareContext();
+  return (env as Record<string, unknown>).R2 ?? null;
 }
