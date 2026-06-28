@@ -10,21 +10,22 @@ import { headers } from "next/headers";
 export default async function PostPage({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
+  const { slug } = await params;
   let post: any = null;
   let adjacent: { prev: any; next: any } = { prev: null, next: null };
 
   try {
     const db = getDb();
-    post = await getPostBySlug(db, params.slug);
+    post = await getPostBySlug(db, slug);
 
     if (!post) {
       notFound();
     }
 
     // Increment view
-    const headersList = headers();
+    const headersList = await headers();
     const ip = headersList.get("x-forwarded-for") || "";
     await incrementViewCount(db, post.id, ip);
 

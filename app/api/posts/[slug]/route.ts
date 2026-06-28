@@ -11,11 +11,12 @@ import { requireAdmin } from "@/lib/session";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
+    const { slug } = await params;
     const db = getDb();
-    const post = await getPostBySlug(db, params.slug);
+    const post = await getPostBySlug(db, slug);
 
     if (!post) {
       return NextResponse.json({ error: "文章不存在" }, { status: 404 });
@@ -36,14 +37,15 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
+    const { slug } = await params;
     await requireAdmin();
     const db = getDb();
 
     // The slug param could actually be an id
-    const post = await getPostBySlug(db, params.slug);
+    const post = await getPostBySlug(db, slug);
     if (!post) {
       return NextResponse.json({ error: "文章不存在" }, { status: 404 });
     }
@@ -62,16 +64,17 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
+    const { slug } = await params;
     await requireAdmin();
     const db = getDb();
 
-    const post = await getPostBySlug(db, params.slug);
+    const post = await getPostBySlug(db, slug);
     if (!post) {
       // Try as id
-      const postById = await getPostById(db, parseInt(params.slug));
+      const postById = await getPostById(db, parseInt(slug));
       if (!postById) {
         return NextResponse.json({ error: "文章不存在" }, { status: 404 });
       }

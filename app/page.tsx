@@ -10,10 +10,11 @@ import { getDb } from "@/lib/db";
 export default async function Home({
   searchParams,
 }: {
-  searchParams: { category?: string; page?: string };
+  searchParams: Promise<{ category?: string; page?: string }>;
 }) {
-  const category = searchParams.category || undefined;
-  const page = parseInt(searchParams.page || "1");
+  const params = await searchParams;
+  const category = params.category || undefined;
+  const page = parseInt(params.page || "1");
 
   let posts: any[] = [];
   let hotPosts: any[] = [];

@@ -1,0 +1,44 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"main": ".open-next/worker.js",
+	"name": "my-blog",
+	"compatibility_date": "2026-06-28",
+	"compatibility_flags": [
+		"nodejs_compat",
+		"global_fetch_strictly_public"
+	],
+	"assets": {
+		"directory": ".open-next/assets",
+		"binding": "ASSETS"
+	},
+	"services": [
+		{
+			"binding": "WORKER_SELF_REFERENCE",
+			"service": "my-blog"
+		}
+	],
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "my-blog-db",
+			"database_id": "9871c8c7-420f-4133-ba84-8c85e979cf59"
+		}
+	],
+	"r2_buckets": [
+		{
+			"binding": "R2",
+			"bucket_name": "my-blog-media"
+		}
+	],
+	"images": {
+		"binding": "IMAGES"
+	},
+	"vars": {
+		"ADMIN_USERNAME": "admin",
+		"ADMIN_PASSWORD": "blog123456",
+		"R2_ENDPOINT": "https://63b3d01ae3b490139ad639ffe8d35253.r2.cloudflarestorage.com",
+		"R2_BUCKET_NAME": "my-blog-media",
+		"R2_PUBLIC_URL": "https://63b3d01ae3b490139ad639ffe8d35253.r2.cloudflarestorage.com/my-blog-media",
+		"SESSION_SECRET": "a7f3c9e1b2d4f6a8c0e2d4f6a8b0c2e4"
+	}
+}
