@@ -1,26 +1,43 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/session";
-import { generateUploadUrl, generateFileKey, getR2PublicUrl } from "@/lib/r2-client";
+import { generateFileKey, getR2PublicUrl } from "@/lib/r2-client";
 import { getDb } from "@/lib/db";
 
 export async function POST(request: NextRequest) {
   try {
     await requireAdmin();
 
-    const { filename, contentType }: { filename: string; contentType: string } = await request.json();
+    const body = await request.formData();
+    const file = body.get("file") as File | null;
 
-    if (!filename || !contentType) {
+    if (!file) {
+      // Also support JSON API for pre-signed URL approach
+      const jsonBody: any = await request.clone().json().catch(() => null);
+      if (jsonBody?.filename && jsonBody?.contentType) {
+        const key = generateFileKey(jsonBody.filename);
+        const publicUrl = getR2PublicUrl(key);
+        return NextResponse.json({
+          key,
+          publicUrl,
+          note: "Direct R2 upload not supported via pre-signed URL in Workers. Use FormData upload instead.",
+        });
+      }
+
       return NextResponse.json(
-        { error: "文件名和内容类型为必填项" },
+        { error: "请选择要上传的文件" },
         { status: 400 }
       );
     }
 
-    const key = generateFileKey(filename);
-    const uploadUrl = await generateUploadUrl(key, contentType);
-    const publicUrl = getR2PublicUrl(key);
+    const key = generateFileKey(file.name);
+    const buffer = await file.arrayBuffer();
+    const contentType = file.type || "application/octet-stream";
 
-    // Record in database using native D1
+    // Upload directly using R2 binding
+    const { uploadToR2 } = await import("@/lib/r2-client");
+    const publicUrl = await uploadToR2(key, buffer, contentType);
+
+    // Record in database
     try {
       const db = getDb();
       const now = new Date().toISOString();
@@ -28,14 +45,14 @@ export async function POST(request: NextRequest) {
         .prepare(
           "INSERT INTO media (filename, url, size, mime_type, uploaded_at) VALUES (?, ?, ?, ?, ?)"
         )
-        .bind(filename, publicUrl, 0, contentType, now)
+        .bind(file.name, publicUrl, file.size, contentType, now)
         .run();
     } catch (dbError) {
       console.error("Failed to record media in DB:", dbError);
     }
 
     return NextResponse.json({
-      uploadUrl,
+      success: true,
       key,
       publicUrl,
     });
