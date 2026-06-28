@@ -1,0 +1,23 @@
+name = "my-blog"
+compatibility_date = "2024-10-18"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = ".next"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "my-blog-db"
+database_id = ""
+
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "my-blog-media"
+
+[vars]
+ADMIN_USERNAME = ""
+ADMIN_PASSWORD = ""
+R2_ACCESS_KEY_ID = ""
+R2_SECRET_ACCESS_KEY = ""
+R2_ENDPOINT = ""
+R2_BUCKET_NAME = "my-blog-media"
+R2_PUBLIC_URL = ""
+SESSION_SECRET = ""

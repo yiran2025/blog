@@ -1,0 +1,87 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-[#FAFBFC] text-[#1E293B];
+  }
+}
+
+/* Markdown content styles */
+.prose {
+  @apply max-w-none;
+}
+
+.prose h1 {
+  @apply text-3xl font-bold mt-8 mb-4 text-[#1E293B];
+}
+
+.prose h2 {
+  @apply text-2xl font-bold mt-6 mb-3 text-[#1E293B] border-b border-gray-200 pb-2;
+}
+
+.prose h3 {
+  @apply text-xl font-semibold mt-5 mb-2 text-[#1E293B];
+}
+
+.prose p {
+  @apply my-4 leading-relaxed text-gray-700;
+}
+
+.prose ul {
+  @apply list-disc pl-6 my-4;
+}
+
+.prose ol {
+  @apply list-decimal pl-6 my-4;
+}
+
+.prose li {
+  @apply my-1;
+}
+
+.prose blockquote {
+  @apply border-l-4 border-[#3B82F6] bg-blue-50 pl-4 py-2 my-4 italic text-gray-600 rounded-r;
+}
+
+.prose a {
+  @apply text-[#3B82F6] hover:text-blue-700 underline;
+}
+
+.prose strong {
+  @apply font-bold text-[#1E293B];
+}
+
+.prose code {
+  @apply bg-gray-100 rounded px-1.5 py-0.5 text-sm text-pink-600 font-mono;
+}
+
+.prose pre {
+  @apply bg-gray-900 text-gray-100 rounded-lg p-4 my-4 overflow-x-auto;
+}
+
+.prose pre code {
+  @apply bg-transparent text-gray-100 px-0 py-0;
+}
+
+.prose img {
+  @apply rounded-lg my-4 max-w-full;
+}
+
+.prose table {
+  @apply w-full border-collapse my-4;
+}
+
+.prose th {
+  @apply bg-gray-100 border border-gray-300 px-4 py-2 text-left font-semibold;
+}
+
+.prose td {
+  @apply border border-gray-300 px-4 py-2;
+}
+
+/* Highlight.js theme override for dark backgrounds */
+.hljs {
+  @apply bg-transparent;
+}
