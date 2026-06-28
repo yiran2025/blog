@@ -7,6 +7,8 @@ import { getDb } from "@/lib/db";
 import { formatDate, estimateReadingTime, getCategoryColor } from "@/lib/utils";
 import { headers } from "next/headers";
 
+export const dynamic = "force-dynamic";
+
 export default async function PostPage({
   params,
 }: {
